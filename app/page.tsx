@@ -1,95 +1,55 @@
-"use client";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import FeatureCard from "@/components/FeatureCard";
 
-import { useState } from "react";
-
-export default function Create() {
-  const [form, setForm] = useState({
-    originalUrl: "",
-    customAlias: "",
-    goLiveDate: "",
-    goLiveTime: "",
-    expiryDate: "",
-    expiryTime: "",
-  });
-
-  const [result, setResult] = useState("");
-
-  const handleSubmit = async () => {
-    const goLive =
-      form.goLiveDate && form.goLiveTime
-        ? new Date(`${form.goLiveDate}T${form.goLiveTime}:00`)
-        : null;
-
-    const expiry =
-      form.expiryDate && form.expiryTime
-        ? new Date(`${form.expiryDate}T${form.expiryTime}:00`)
-        : null;
-
-    const res = await fetch("/api/links", {
-      method: "POST",
-      body: JSON.stringify({
-        originalUrl: form.originalUrl,
-        customAlias: form.customAlias,
-        goLiveAt: goLive,
-        expiresAt: expiry,
-      }),
-    });
-
-    const data = await res.json();
-    setResult(data.shortUrl || data.error);
-  };
-
+export default function Home() {
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Create Smart Link</h2>
+    <main className="min-h-screen bg-slate-950 text-white">
+      <Navbar />
 
-      <input
-        placeholder="Original URL"
-        onChange={(e) =>
-          setForm({ ...form, originalUrl: e.target.value })
-        }
-      />
+      <section className="mx-auto max-w-7xl px-6 py-24">
+        <Hero />
+      </section>
 
-      <input
-        placeholder="Alias"
-        onChange={(e) =>
-          setForm({ ...form, customAlias: e.target.value })
-        }
-      />
+      <section className="mx-auto max-w-7xl px-6 pb-24">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <FeatureCard
+            title="Smart Links"
+            description="Create custom short URLs with memorable aliases."
+          />
 
-      <h4>Go Live</h4>
-      <input
-        type="date"
-        onChange={(e) =>
-          setForm({ ...form, goLiveDate: e.target.value })
-        }
-      />
-      <input
-        type="time"
-        onChange={(e) =>
-          setForm({ ...form, goLiveTime: e.target.value })
-        }
-      />
+          <FeatureCard
+            title="Scheduling"
+            description="Set go-live and expiry dates for every link."
+          />
 
-      <h4>Expiry</h4>
-      <input
-        type="date"
-        onChange={(e) =>
-          setForm({ ...form, expiryDate: e.target.value })
-        }
-      />
-      <input
-        type="time"
-        onChange={(e) =>
-          setForm({ ...form, expiryTime: e.target.value })
-        }
-      />
+          <FeatureCard
+            title="Analytics"
+            description="Track clicks and monitor link performance."
+          />
 
-      <button onClick={handleSubmit}>
-        Create Link
-      </button>
+          <FeatureCard
+            title="Fast Redirects"
+            description="Instant redirection powered by Next.js and Prisma."
+          />
+        </div>
 
-      <p>{result}</p>
-    </div>
+        <div className="mt-16 flex gap-4">
+          <a
+            href="/create"
+            className="rounded-xl bg-blue-600 px-6 py-3 font-semibold hover:bg-blue-700"
+          >
+            Create Link
+          </a>
+
+          <a
+            href="/dashboard"
+            className="rounded-xl border border-slate-700 px-6 py-3 font-semibold hover:bg-slate-900"
+          >
+            Dashboard
+          </a>
+        </div>
+      </section>
+    </main>
   );
 }

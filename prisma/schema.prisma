@@ -8,14 +8,11 @@ datasource db {
 }
 
 model Link {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   originalUrl String
-  shortCode   String   @unique
-
+  shortCode   String    @unique
   goLiveAt    DateTime?
   expiresAt   DateTime?
-
-  clicks      Int      @default(0)
-
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
+  clicks      Int       @default(0)
 }

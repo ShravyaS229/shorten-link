@@ -43,9 +43,13 @@ export async function POST(req: Request) {
       link,
     });
   } catch (err) {
-    return Response.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
-  }
+  console.error("CREATE LINK ERROR:", err);
+
+  return Response.json(
+    {
+      error: String(err),
+    },
+    { status: 500 }
+  );
+}
 }

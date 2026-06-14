@@ -1,35 +1,64 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
-export default async function Page({
+interface PageProps {
+  params: Promise<{
+    shortCode: string;
+  }>;
+}
+
+export default async function ShortCodePage({
   params,
-}: {
-  params: { shortCode: string };
-}) {
+}: PageProps) {
+  const { shortCode } = await params;
+
   const link = await prisma.link.findUnique({
-    where: { shortCode: params.shortCode },
+    where: {
+      shortCode,
+    },
   });
 
   if (!link) {
-    return <h1>Link not found</h1>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <h1 className="text-2xl font-bold">
+          Link Not Found
+        </h1>
+      </div>
+    );
   }
 
   const now = new Date();
 
-  // NOT ACTIVE
   if (link.goLiveAt && now < link.goLiveAt) {
-    return <h1>⛔ Link not active yet</h1>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <h1 className="text-2xl font-bold">
+          Link not active yet
+        </h1>
+      </div>
+    );
   }
 
-  // EXPIRED
   if (link.expiresAt && now > link.expiresAt) {
-    return <h1>⛔ Link expired</h1>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <h1 className="text-2xl font-bold">
+          Link expired
+        </h1>
+      </div>
+    );
   }
 
-  // track clicks
   await prisma.link.update({
-    where: { shortCode: params.shortCode },
-    data: { clicks: { increment: 1 } },
+    where: {
+      shortCode,
+    },
+    data: {
+      clicks: {
+        increment: 1,
+      },
+    },
   });
 
   redirect(link.originalUrl);
