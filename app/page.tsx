@@ -12,6 +12,12 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 pb-24">
+
+        {/* FIX: heading added + visible */}
+        <h2 className="text-3xl font-bold mb-8 text-white">
+          Features
+        </h2>
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <FeatureCard
             title="Smart Links"

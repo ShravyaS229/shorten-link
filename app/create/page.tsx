@@ -1,285 +1,99 @@
 "use client";
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
 
 export default function CreatePage() {
-  const [originalUrl, setOriginalUrl] = useState("");
-  const [customAlias, setCustomAlias] = useState("");
+  const [form, setForm] = useState({
+    originalUrl: "",
+    customAlias: "",
+    goLiveAt: "",
+    expiresAt: "",
+  });
 
-  const [goLiveDate, setGoLiveDate] = useState("");
-  const [goLiveTime, setGoLiveTime] = useState("");
-
-  const [expiryDate, setExpiryDate] = useState("");
-  const [expiryTime, setExpiryTime] = useState("");
-
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState("");
 
   async function createLink() {
-    if (!originalUrl.trim()) {
-      setMessage("Original URL is required");
-      return;
-    }
+    setResult("");
 
-    setLoading(true);
+    const res = await fetch("/api/links", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
 
-    try {
-      const res = await fetch("/api/links", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          originalUrl,
-          customAlias,
+    const data = await res.json();
 
-          goLiveAt:
-            goLiveDate && goLiveTime
-              ? `${goLiveDate}T${goLiveTime}`
-              : null,
-
-          expiresAt:
-            expiryDate && expiryTime
-              ? `${expiryDate}T${expiryTime}`
-              : null,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessage(
-          `Created Successfully: ${data.shortUrl}`
-        );
-      } else {
-        setMessage(
-          data.error || "Failed to create link"
-        );
-      }
-    } catch (error) {
-      console.error(error);
-      setMessage("Server Error");
-    } finally {
-      setLoading(false);
+    if (res.ok) {
+      setResult(`Success: ${data.shortUrl}`);
+    } else {
+      setResult(data.error || "Error occurred");
     }
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <Navbar />
+    <main className="min-h-screen bg-slate-950 text-white p-6 flex justify-center items-center">
 
-      <div className="mx-auto max-w-7xl px-6 py-12">
-        <div className="mb-10">
-          <h1 className="text-5xl font-bold">
-            Create Smart Link
-          </h1>
+      <div className="w-full max-w-xl">
 
-          <p className="mt-3 text-slate-400">
-            Create, schedule, track and manage
-            intelligent short links.
+        <h1 className="text-4xl font-bold mb-2">
+          Create Smart Link
+        </h1>
+
+        <p className="text-sm text-slate-400 mb-6">
+         Create a custom short URL
+        </p>
+
+        <input
+          placeholder="Original URL"
+          className="w-full p-3 mb-3 bg-slate-800 rounded"
+          onChange={(e) =>
+            setForm({ ...form, originalUrl: e.target.value })
+          }
+        />
+
+        <input
+          placeholder="Custom Alias"
+          className="w-full p-3 mb-3 bg-slate-800 rounded"
+          onChange={(e) =>
+            setForm({ ...form, customAlias: e.target.value })
+          }
+        />
+
+        <label className="text-xs text-slate-400">
+          Go Live Date & Time
+        </label>
+        <input
+          type="datetime-local"
+          className="w-full p-3 mb-3 bg-slate-800 rounded text-white [color-scheme:dark]"
+          onChange={(e) =>
+            setForm({ ...form, goLiveAt: e.target.value })
+          }
+        />
+
+        <label className="text-xs text-slate-400">
+          Expiry Date & Time
+        </label>
+        <input
+          type="datetime-local"
+          className="w-full p-3 mb-4 bg-slate-800 rounded text-white [color-scheme:dark]"
+          onChange={(e) =>
+            setForm({ ...form, expiresAt: e.target.value })
+          }
+        />
+
+        <button
+          onClick={createLink}
+          className="w-full bg-blue-600 px-6 py-3 rounded font-bold"
+        >
+          Create Link
+        </button>
+
+        {result && (
+          <p className="mt-4 text-green-400 text-center">
+            {result}
           </p>
-        </div>
+        )}
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* LEFT PANEL */}
-
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8">
-            <h2 className="mb-6 text-2xl font-bold">
-              Link Configuration
-            </h2>
-
-            <div className="space-y-6">
-              <div>
-                <label className="mb-2 block font-medium">
-                  Original URL
-                </label>
-
-                <input
-                  type="url"
-                  placeholder="https://github.com"
-                  value={originalUrl}
-                  onChange={(e) =>
-                    setOriginalUrl(e.target.value)
-                  }
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 p-4 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block font-medium">
-                  Custom Alias
-                </label>
-
-                <input
-                  type="text"
-                  placeholder="github-demo"
-                  value={customAlias}
-                  onChange={(e) =>
-                    setCustomAlias(e.target.value)
-                  }
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 p-4 outline-none"
-                />
-              </div>
-
-              <div className="rounded-2xl border border-blue-800 p-5">
-                <h3 className="text-lg font-bold text-blue-400">
-                  Go Live Schedule (Optional)
-                </h3>
-
-                <p className="mb-4 mt-1 text-sm text-slate-400">
-                  Choose when the link becomes active.
-                </p>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block">
-                      Date
-                    </label>
-
-                    <input
-                      type="date"
-                      value={goLiveDate}
-                      onChange={(e) =>
-                        setGoLiveDate(e.target.value)
-                      }
-                      className="w-full rounded-xl border border-slate-700 bg-slate-800 p-3"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block">
-                      Time
-                    </label>
-
-                    <input
-                      type="time"
-                      value={goLiveTime}
-                      onChange={(e) =>
-                        setGoLiveTime(e.target.value)
-                      }
-                      className="w-full rounded-xl border border-slate-700 bg-slate-800 p-3"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-red-800 p-5">
-                <h3 className="text-lg font-bold text-red-400">
-                  Expiry Schedule (Optional)
-                </h3>
-
-                <p className="mb-4 mt-1 text-sm text-slate-400">
-                  Disable the link automatically.
-                </p>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block">
-                      Date
-                    </label>
-
-                    <input
-                      type="date"
-                      value={expiryDate}
-                      onChange={(e) =>
-                        setExpiryDate(e.target.value)
-                      }
-                      className="w-full rounded-xl border border-slate-700 bg-slate-800 p-3"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block">
-                      Time
-                    </label>
-
-                    <input
-                      type="time"
-                      value={expiryTime}
-                      onChange={(e) =>
-                        setExpiryTime(e.target.value)
-                      }
-                      className="w-full rounded-xl border border-slate-700 bg-slate-800 p-3"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={createLink}
-                disabled={loading}
-                className="w-full rounded-xl bg-blue-600 p-4 text-lg font-semibold transition hover:bg-blue-700 disabled:opacity-60"
-              >
-                {loading
-                  ? "Creating..."
-                  : "Create Link"}
-              </button>
-
-              {message && (
-                <div className="rounded-xl border border-green-700 bg-green-900/30 p-4">
-                  {message}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT PANEL */}
-
-          <div className="rounded-3xl border border-slate-800 bg-slate-900 p-8">
-            <h2 className="mb-6 text-2xl font-bold">
-              Live Preview
-            </h2>
-
-            <div className="space-y-5">
-              <div className="rounded-xl bg-slate-800 p-4">
-                <p className="text-sm text-slate-400">
-                  Short URL
-                </p>
-
-                <p className="mt-2 text-lg font-semibold text-blue-400">
-                  {customAlias
-                    ? `flcut.vercel.app/${customAlias}`
-                    : "flcut.vercel.app/your-link"}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-800 p-4">
-                <p className="text-sm text-slate-400">
-                  Destination
-                </p>
-
-                <p className="mt-2 break-all">
-                  {originalUrl || "No URL selected"}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-800 p-4">
-                <p className="text-sm text-slate-400">
-                  Go Live
-                </p>
-
-                <p className="mt-2">
-                  {goLiveDate
-                    ? `${goLiveDate} ${goLiveTime}`
-                    : "Immediately"}
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-800 p-4">
-                <p className="text-sm text-slate-400">
-                  Expiry
-                </p>
-
-                <p className="mt-2">
-                  {expiryDate
-                    ? `${expiryDate} ${expiryTime}`
-                    : "Never"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
   );

@@ -1,63 +1,61 @@
 import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-interface PageProps {
-  params: Promise<{
-    shortCode: string;
-  }>;
-}
-
-export default async function ShortCodePage({
+export default async function Page({
   params,
-}: PageProps) {
+}: {
+  params: Promise<{ shortCode: string }>;
+}) {
   const { shortCode } = await params;
 
+  if (!shortCode) {
+    return <h1>Invalid Link</h1>;
+  }
+
   const link = await prisma.link.findUnique({
-    where: {
-      shortCode,
-    },
+    where: { shortCode },
   });
 
   if (!link) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <h1 className="text-2xl font-bold">
-          Link Not Found
-        </h1>
-      </div>
-    );
+    return <h1>Link Not Found</h1>;
   }
 
   const now = new Date();
 
   if (link.goLiveAt && now < link.goLiveAt) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <h1 className="text-2xl font-bold">
-          Link not active yet
-        </h1>
+      <div>
+        <h1>Link Not Active Yet</h1>
+        <p>Will activate at: {link.goLiveAt.toString()}</p>
       </div>
     );
   }
 
   if (link.expiresAt && now > link.expiresAt) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <h1 className="text-2xl font-bold">
-          Link expired
-        </h1>
+      <div>
+        <h1>Link Expired</h1>
+        <p>Expired at: {link.expiresAt.toString()}</p>
       </div>
     );
   }
 
-  await prisma.link.update({
-    where: {
-      shortCode,
-    },
+  const h = await headers();
+
+  await prisma.clickEvent.create({
     data: {
-      clicks: {
-        increment: 1,
-      },
+      linkId: link.id,
+      referrer: h.get("referer"),
+      userAgent: h.get("user-agent"),
+      ip: h.get("x-forwarded-for"),
+    },
+  });
+
+  await prisma.link.update({
+    where: { shortCode },
+    data: {
+      clicks: { increment: 1 },
     },
   });
 

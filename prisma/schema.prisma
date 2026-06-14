@@ -8,11 +8,26 @@ datasource db {
 }
 
 model Link {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   originalUrl String
-  shortCode   String    @unique
+  shortCode   String   @unique
+
   goLiveAt    DateTime?
   expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
-  clicks      Int       @default(0)
+
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  clickEvents ClickEvent[]
+}
+
+model ClickEvent {
+  id        String   @id @default(cuid())
+  linkId    String
+  timestamp DateTime @default(now())
+  referrer  String?
+  userAgent String?
+  ip        String?
+
+  link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
 }
