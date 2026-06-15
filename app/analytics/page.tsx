@@ -2,23 +2,57 @@ import { prisma } from "@/lib/prisma";
 
 export default async function AnalyticsPage() {
   const events = await prisma.clickEvent.findMany({
-    orderBy: { timestamp: "desc" },
+    orderBy: {
+      createdAt: "desc",
+    },
     take: 50,
+    include: {
+      link: true,
+    },
   });
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Analytics</h1>
+    <main className="min-h-screen bg-slate-950 text-white px-6 py-10">
+      <h1 className="text-4xl font-bold mb-8">
+        Analytics
+      </h1>
 
-      <div className="space-y-4">
-        {events.map((e) => (
-          <div key={e.id} className="bg-slate-900 p-4 rounded-xl">
-            <p>{new Date(e.timestamp).toString()}</p>
-            <p className="text-slate-400">{e.referrer}</p>
-            <p className="text-slate-500">{e.userAgent}</p>
-          </div>
-        ))}
-      </div>
-    </div>
+      {events.length === 0 ? (
+        <p className="text-slate-400">
+          No click data available
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {events.map((e) => (
+            <div
+              key={e.id}
+              className="bg-slate-900 border border-slate-800 rounded-xl p-4"
+            >
+              <p className="text-blue-400 font-semibold">
+                /{e.link?.shortCode}
+              </p>
+
+              <p className="text-sm text-slate-300">
+                {e.link?.originalUrl}
+              </p>
+
+              <p className="text-sm text-slate-400 mt-2">
+                Time:{" "}
+                {new Date(e.createdAt).toLocaleString()}
+              </p>
+
+              <p className="text-sm text-slate-400">
+                IP: {e.ip}
+              </p>
+
+              <p className="text-sm text-slate-400">
+                Device:{" "}
+                {e.userAgent?.slice(0, 80)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </main>
   );
 }

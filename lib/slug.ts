@@ -1,34 +1,18 @@
-import { prisma } from "./prisma";
+import { prisma } from "@/lib/prisma";
 
-const RESERVED = ["admin", "api", "dashboard", "create", "analytics"];
+export async function generateShortCode() {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-export async function generateShortCode(custom?: string) {
-  if (custom) {
-    if (RESERVED.includes(custom)) {
-      throw new Error("Reserved keyword");
+  while (true) {
+    let code = "";
+    for (let i = 0; i < 6; i++) {
+      code += chars[Math.floor(Math.random() * chars.length)];
     }
 
     const exists = await prisma.link.findUnique({
-      where: { shortCode: custom },
-    });
-
-    if (exists) {
-      throw new Error("Alias already taken");
-    }
-
-    return custom;
-  }
-
-  let code = "";
-  let exists = true;
-
-  while (exists) {
-    code = Math.random().toString(36).substring(2, 8);
-    const found = await prisma.link.findUnique({
       where: { shortCode: code },
     });
-    exists = !!found;
-  }
 
-  return code;
+    if (!exists) return code;
+  }
 }
