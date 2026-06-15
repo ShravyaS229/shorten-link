@@ -1,111 +1,63 @@
 import { prisma } from "@/lib/prisma";
-import { isReserved } from "@/lib/reserved";
-import { generateShortCode } from "@/lib/slug";
 
-function parseLocalDateTime(dateTime: string): Date {
-  const [datePart, timePart] = dateTime.split("T");
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ shortCode: string }> }
+) {
+  const { shortCode } = await context.params;
 
-  const [year, month, day] = datePart
-    .split("-")
-    .map(Number);
+  const link = await prisma.link.findUnique({
+    where: { shortCode },
+  });
 
-  const [hour, minute] = timePart
-    .split(":")
-    .map(Number);
-
-  const utcMillis = Date.UTC(
-    year,
-    month - 1,
-    day,
-    hour - 5,
-    minute - 30
-  );
-
-  return new Date(utcMillis);
-}
-
-export async function POST(req: Request) {
-  const body = await req.json();
-
-  const {
-    originalUrl,
-    customAlias,
-    goLiveAt,
-    expiresAt,
-  } = body;
-
-  if (!originalUrl) {
-    return Response.json(
-      { error: "Original URL required" },
-      { status: 400 }
-    );
+  if (!link) {
+    return new Response("Not found", { status: 404 });
   }
 
-  let shortCode = customAlias?.trim();
+  const now = new Date();
 
-  if (shortCode) {
-    if (isReserved(shortCode)) {
-      return Response.json(
-        { error: "Alias is reserved" },
-        { status: 400 }
-      );
-    }
-
-    const exists = await prisma.link.findUnique({
-      where: {
-        shortCode,
-      },
-    });
-
-    if (exists) {
-      return Response.json(
-        { error: "Alias already taken" },
-        { status: 400 }
-      );
-    }
-  } else {
-    shortCode = await generateShortCode();
+  if (link.goLiveAt && now < link.goLiveAt) {
+    return new Response("Link not live yet", { status: 403 });
   }
 
-  const goLiveDate = goLiveAt
-    ? parseLocalDateTime(goLiveAt)
-    : null;
-
-  const expiryDate = expiresAt
-    ? parseLocalDateTime(expiresAt)
-    : null;
-
-  if (
-    goLiveDate &&
-    expiryDate &&
-    expiryDate <= goLiveDate
-  ) {
-    return Response.json(
-      {
-        error:
-          "Expiry must be after Go Live time",
-      },
-      { status: 400 }
-    );
+  if (link.expiresAt && now > link.expiresAt) {
+    return new Response("Link expired", { status: 410 });
   }
 
-  const link = await prisma.link.create({
+  const h = req.headers;
+
+  const forwardedFor = h.get("x-forwarded-for") || "";
+  const ip =
+    forwardedFor.split(",")[0]?.trim() ||
+    h.get("x-real-ip") ||
+    "unknown";
+
+  const userAgent = h.get("user-agent") || "unknown";
+  const referrer = h.get("referer") || "direct";
+
+  const country =
+    h.get("x-vercel-ip-country") || "Unknown";
+
+  const city =
+    h.get("x-vercel-ip-city") || "Unknown";
+
+  await prisma.clickEvent.create({
     data: {
-      originalUrl,
-      shortCode,
-      goLiveAt: goLiveDate,
-      expiresAt: expiryDate,
+      linkId: link.id,
+      ip,
+      userAgent,
+      referrer,
+      country,
+      city,
     },
   });
 
-  const host = req.headers.get("host");
-
-  const protocol =
-    process.env.NODE_ENV === "development"
-      ? "http"
-      : "https";
-
-  return Response.json({
-    shortUrl: `${protocol}://${host}/${link.shortCode}`,
+  await prisma.link.update({
+    where: { id: link.id },
+    data: {
+      clicks: { increment: 1 },
+    },
   });
+
+  return Response.redirect(link.originalUrl, 302);
 }

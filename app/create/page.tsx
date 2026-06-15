@@ -15,10 +15,31 @@ export default function CreatePage() {
   async function createLink() {
     setResult("");
 
+    const convertToUTC = (local: string) => {
+      if (!local) return "";
+
+      const [date, time] = local.split("T");
+
+      const [year, month, day] = date.split("-").map(Number);
+      const [hour, minute] = time.split(":").map(Number);
+
+      const utc = new Date(
+        Date.UTC(year, month - 1, day, hour - 5, minute - 30)
+      );
+
+      return utc.toISOString();
+    };
+
+    const payload = {
+      ...form,
+      goLiveAt: form.goLiveAt ? convertToUTC(form.goLiveAt) : "",
+      expiresAt: form.expiresAt ? convertToUTC(form.expiresAt) : "",
+    };
+
     const res = await fetch("/api/links", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
@@ -32,15 +53,13 @@ export default function CreatePage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white p-6 flex justify-center items-center">
-
       <div className="w-full max-w-xl">
-
         <h1 className="text-4xl font-bold mb-2">
           Create Smart Link
         </h1>
 
         <p className="text-sm text-slate-400 mb-6">
-         Create a custom short URL
+          Create a custom short URL
         </p>
 
         <input
@@ -93,7 +112,6 @@ export default function CreatePage() {
             {result}
           </p>
         )}
-
       </div>
     </main>
   );

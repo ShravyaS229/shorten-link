@@ -21,7 +21,6 @@ export async function POST(req: Request) {
 
   let shortCode = customAlias?.trim();
 
-  // RESERVED WORD CHECK
   if (shortCode) {
     if (isReserved(shortCode)) {
       return Response.json(
@@ -44,20 +43,9 @@ export async function POST(req: Request) {
     shortCode = await generateShortCode();
   }
 
-  let goLiveDate: Date | null = null;
-  let expiryDate: Date | null = null;
+  const goLiveDate = goLiveAt ? new Date(goLiveAt) : null;
+  const expiryDate = expiresAt ? new Date(expiresAt) : null;
 
-  if (goLiveAt) {
-    const localDate = new Date(goLiveAt);
-    goLiveDate = new Date(localDate.getTime());
-  }
-
-  if (expiresAt) {
-    const localDate = new Date(expiresAt);
-    expiryDate = new Date(localDate.getTime());
-  }
-
-  // DATE VALIDATION
   if (goLiveDate && expiryDate && expiryDate <= goLiveDate) {
     return Response.json(
       { error: "Expiry must be after Go Live time" },
