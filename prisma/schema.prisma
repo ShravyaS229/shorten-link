@@ -23,9 +23,14 @@ model Link {
 model ClickEvent {
   id        String   @id @default(cuid())
   linkId    String
+
   ip        String?
   userAgent String?
   referrer  String?
+
+  country   String?
+  city      String?
+
   createdAt DateTime @default(now())
 
   link      Link     @relation(fields: [linkId], references: [id])

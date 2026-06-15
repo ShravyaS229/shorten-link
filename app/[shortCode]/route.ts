@@ -17,12 +17,10 @@ export async function GET(
 
   const now = new Date();
 
-  // Not live yet
   if (link.goLiveAt && now < link.goLiveAt) {
     return new Response("Link not live yet", { status: 403 });
   }
 
-  // expired
   if (link.expiresAt && now > link.expiresAt) {
     return new Response("Link expired", { status: 410 });
   }
@@ -30,19 +28,25 @@ export async function GET(
   const ip =
     req.headers.get("x-forwarded-for") || "unknown";
 
-  const userAgent = req.headers.get("user-agent") || "unknown";
-  const referrer = req.headers.get("referer") || "direct";
+  const userAgent =
+    req.headers.get("user-agent") || "unknown";
 
-  // unique check
-  const existing = await prisma.clickEvent.findFirst({
-    where: {
-      linkId: link.id,
-      ip,
-      userAgent,
-    },
-  });
+  const referrer =
+    req.headers.get("referer") || "direct";
 
-  const isUnique = !existing;
+  let country = "Unknown";
+  let city = "Unknown";
+
+  try {
+    const res = await fetch(
+      `http://ip-api.com/json/${ip}`
+    );
+
+    const data = await res.json();
+
+    country = data.country || "Unknown";
+    city = data.city || "Unknown";
+  } catch {}
 
   await prisma.clickEvent.create({
     data: {
@@ -50,13 +54,17 @@ export async function GET(
       ip,
       userAgent,
       referrer,
+      country,
+      city,
     },
   });
 
   await prisma.link.update({
     where: { id: link.id },
     data: {
-      clicks: { increment: 1 },
+      clicks: {
+        increment: 1,
+      },
     },
   });
 
