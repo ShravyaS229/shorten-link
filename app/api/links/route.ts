@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     );
   }
 
-  let shortCode = customAlias;
+  let shortCode = customAlias?.trim();
 
   // RESERVED WORD CHECK
   if (shortCode) {
@@ -44,26 +44,38 @@ export async function POST(req: Request) {
     shortCode = await generateShortCode();
   }
 
+  let goLiveDate: Date | null = null;
+  let expiryDate: Date | null = null;
+
+  if (goLiveAt) {
+    const localDate = new Date(goLiveAt);
+    goLiveDate = new Date(localDate.getTime());
+  }
+
+  if (expiresAt) {
+    const localDate = new Date(expiresAt);
+    expiryDate = new Date(localDate.getTime());
+  }
+
   // DATE VALIDATION
-  if (goLiveAt && expiresAt) {
-    if (new Date(expiresAt) < new Date(goLiveAt)) {
-      return Response.json(
-        { error: "Expiry must be after Go Live time" },
-        { status: 400 }
-      );
-    }
+  if (goLiveDate && expiryDate && expiryDate <= goLiveDate) {
+    return Response.json(
+      { error: "Expiry must be after Go Live time" },
+      { status: 400 }
+    );
   }
 
   const link = await prisma.link.create({
     data: {
       originalUrl,
       shortCode,
-      goLiveAt: goLiveAt ? new Date(goLiveAt) : null,
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      goLiveAt: goLiveDate,
+      expiresAt: expiryDate,
     },
   });
 
   const host = req.headers.get("host");
+
   const protocol =
     process.env.NODE_ENV === "development"
       ? "http"
