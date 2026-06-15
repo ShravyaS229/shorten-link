@@ -21,9 +21,7 @@ export async function POST(req: Request) {
 
   let shortCode = customAlias;
 
-  // -------------------------
-  // RESERVED CHECK
-  // -------------------------
+  // RESERVED WORD CHECK
   if (shortCode) {
     if (isReserved(shortCode)) {
       return Response.json(
@@ -46,9 +44,7 @@ export async function POST(req: Request) {
     shortCode = await generateShortCode();
   }
 
-  // -------------------------
   // DATE VALIDATION
-  // -------------------------
   if (goLiveAt && expiresAt) {
     if (new Date(expiresAt) < new Date(goLiveAt)) {
       return Response.json(
@@ -67,7 +63,13 @@ export async function POST(req: Request) {
     },
   });
 
+  const host = req.headers.get("host");
+  const protocol =
+    process.env.NODE_ENV === "development"
+      ? "http"
+      : "https";
+
   return Response.json({
-    shortUrl: `http://localhost:3000/${link.shortCode}`,
+    shortUrl: `${protocol}://${host}/${link.shortCode}`,
   });
 }
