@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function DashboardPage() {
   const links = await prisma.link.findMany({
     include: {
@@ -12,7 +15,9 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        Dashboard
+      </h1>
 
       <div className="text-lg mb-4">
         Total Links: {links.length}
