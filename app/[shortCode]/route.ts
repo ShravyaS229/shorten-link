@@ -27,6 +27,7 @@ export async function GET(
   const h = req.headers;
 
   const forwardedFor = h.get("x-forwarded-for") || "";
+
   const ip =
     forwardedFor.split(",")[0]?.trim() ||
     h.get("x-real-ip") ||
@@ -35,6 +36,7 @@ export async function GET(
   const userAgent = h.get("user-agent") || "unknown";
   const referrer = h.get("referer") || "direct";
 
+ 
   const country =
     h.get("x-vercel-ip-country") || "Unknown";
 

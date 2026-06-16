@@ -52,7 +52,10 @@ export default function CreatePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-6 flex justify-center items-center">
+    <main
+      suppressHydrationWarning
+      className="min-h-screen bg-slate-950 text-white p-6 flex justify-center items-center"
+    >
       <div className="w-full max-w-xl">
         <h1 className="text-4xl font-bold mb-2">
           Create Smart Link
@@ -63,6 +66,8 @@ export default function CreatePage() {
         </p>
 
         <input
+          name="originalUrl"
+          autoComplete="off"
           placeholder="Original URL"
           className="w-full p-3 mb-3 bg-slate-800 rounded"
           onChange={(e) =>
@@ -71,6 +76,8 @@ export default function CreatePage() {
         />
 
         <input
+          name="customAlias"
+          autoComplete="off"
           placeholder="Custom Alias"
           className="w-full p-3 mb-3 bg-slate-800 rounded"
           onChange={(e) =>
@@ -81,8 +88,10 @@ export default function CreatePage() {
         <label className="text-xs text-slate-400">
           Go Live Date & Time
         </label>
+
         <input
           type="datetime-local"
+          autoComplete="off"
           className="w-full p-3 mb-3 bg-slate-800 rounded text-white [color-scheme:dark]"
           onChange={(e) =>
             setForm({ ...form, goLiveAt: e.target.value })
@@ -92,8 +101,10 @@ export default function CreatePage() {
         <label className="text-xs text-slate-400">
           Expiry Date & Time
         </label>
+
         <input
           type="datetime-local"
+          autoComplete="off"
           className="w-full p-3 mb-4 bg-slate-800 rounded text-white [color-scheme:dark]"
           onChange={(e) =>
             setForm({ ...form, expiresAt: e.target.value })
